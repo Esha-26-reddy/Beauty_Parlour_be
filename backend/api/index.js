@@ -81,7 +81,8 @@ app.use((err, req, res, next) => {
 });
 
 // Start server
-const PORT = process.env.PORT || 5000;
-app.listen(PORT, () => console.log(`\nServer running at http://localhost:${PORT}`));
-
-export const handler = serverless(app);
+// const PORT = process.env.PORT || 5000;
+// app.listen(PORT, () => console.log(`\nServer running at http://localhost:${PORT}`));
+// 
+// export const handler = serverless(app);
+module.exports.handler = serverless(app);

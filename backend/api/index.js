@@ -23,13 +23,13 @@ mongoose
   .catch((err) => console.error("MongoDB error:", err));
 
 // Routes
-const authRoutes = require("./routes/auth");
-const chatbotRoutes = require("./routes/chat");
-const paymentRoutes = require("./routes/paymentRoutes");
-const cartPaymentRoutes = require("./routes/payment");
-const appointmentRoutes = require("./routes/appointments");
-const orderRoutes = require("./routes/orderRoutes");
-const confirmationEmailRoute = require("./routes/sendConfirmationEmail");
+const authRoutes = require("../routes/auth");
+const chatbotRoutes = require("../routes/chat");
+const paymentRoutes = require("../routes/paymentRoutes");
+const cartPaymentRoutes = require("../routes/payment");
+const appointmentRoutes = require("../routes/appointments");
+const orderRoutes = require("../routes/orderRoutes");
+const confirmationEmailRoute = require("../routes/sendConfirmationEmail");
 
 app.use("/api/auth", authRoutes);
 app.use("/api/chatbot", chatbotRoutes);

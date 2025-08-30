@@ -63,7 +63,7 @@ app.get("/api/health", (req, res) => {
       timestamp: new Date().toISOString(),
     });
   } catch (err) {
-    ers.status(500).json({
+    err.status(500).json({
       status: "DOWN",
       error: err.message,
       timestamp: new Date().toISOString(),

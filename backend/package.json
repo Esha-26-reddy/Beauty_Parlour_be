@@ -1,10 +1,11 @@
 {
   "name": "backend",
   "version": "1.0.0",
-  "main": "index.js",
+  "main": "api/index.js",
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1",
-    "start": "node api/index.js"
+    "start": "node api/index.js",
+    "dev": "nodemon api/index.js",
+    "test": "echo \"Error: no test specified\" && exit 1"
   },
   "keywords": [],
   "author": "",
@@ -23,5 +24,8 @@
     "razorpay": "^2.9.6",
     "serverless-http": "^3.2.0"
   },
-  "description": ""
+  "devDependencies": {
+    "nodemon": "^3.1.0"
+  },
+  "description": "Backend API for beauty parlour project deployed on Vercel"
 }

@@ -39,7 +39,7 @@ app.use("/api/appointments", appointmentRoutes);
 app.use("/api/orders", orderRoutes);
 app.use("/api", confirmationEmailRoute);
 
-app.get("/health", (req, res) => {
+app.get("/api/health", (req, res) => {
   try {
     let dbHealth = "UNKNOWN";
     switch(mongoose.connection.readyState) {

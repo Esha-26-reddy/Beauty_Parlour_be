@@ -19,8 +19,8 @@ mongoose
     useNewUrlParser: true,
     useUnifiedTopology: true,
   })
-  .then(() => console.log("MongoDB connected \n"))
-  .catch((err) => console.error("MongoDB error:", err));
+  .then(() => console.log("✅ MongoDB connected \n"))
+  .catch((err) => console.error("❌ MongoDB error:", err));
 
 // Routes
 const authRoutes = require("../routes/auth");
@@ -38,12 +38,36 @@ app.use("/api/appointments", appointmentRoutes);
 app.use("/api/orders", orderRoutes);
 app.use("/api", confirmationEmailRoute);
 
-app.get("/api/orders/test", (req, res) => {
-  res.json({ message: "Order routes test works!" });
-});
-
-app.get("/", (req, res) => {
-  res.send("Backend server is running!");
+app.get("/health", (req, res) => {
+  try {
+    let dbHealth = "UNKNOWN";
+    switch(mongoose.connection.readyState) {
+      case 0:
+        dbHealth = "DISCONNECTED";
+        break;
+      case 1:
+        dbHealth = "CONNECTED";
+        break;
+      case 2:
+        dbHealth = "CONNECTING";
+        break;
+      case 3:
+        dbHealth = "DISCONNECTING";
+        break;  
+    }
+    res.status(200).json({ 
+      message: "Welcome",
+      status: "BE UP",
+      database: dbHealth,
+      timestamp: new Date().toISOString(),
+    });
+  } catch (err) {
+    ers.status(500).json({
+      status: "DOWN",
+      error: err.message,
+      timestamp: new Date().toISOString(),
+    })
+  }
 });
 
 // Error handler

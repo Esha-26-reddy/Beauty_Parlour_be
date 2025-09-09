@@ -12,12 +12,12 @@ app.get("/health", (req, res) => {
   res.json({ status: "ok" });
 });
 
-// Your other routes
+// Import your routes
 app.use("/auth", require("../routes/auth"));
 app.use("/chat", require("../routes/chat"));
 app.use("/payment", require("../routes/paymentRoutes"));
 app.use("/order", require("../routes/orderRoutes"));
 app.use("/appointments", require("../routes/appointments"));
 
-module.exports = app;
-module.exports.handler = serverless(app);
+// Export only the handler
+module.exports = serverless(app);

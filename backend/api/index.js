@@ -8,7 +8,7 @@ const app = express();
 // Middleware
 app.use(
   cors({
-    origin: ["https://rohini-beauty-parlour.vercel.app", "http://localhost:3000"],
+    origin: ["https://rohini-beauty-parlour.vercel.app/api/health", "http://localhost:3000"],
     credentials: true,
   })
 );

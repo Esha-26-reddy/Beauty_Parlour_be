@@ -19,10 +19,7 @@ let isConnected = false;
 async function connectDB() {
   if (isConnected) return;
   try {
-    await mongoose.connect(process.env.MONGO_URI, {
-      useNewUrlParser: true,
-      useUnifiedTopology: true,
-    });
+    await mongoose.connect(process.env.MONGO_URI);
     isConnected = true;
     console.log("✅ MongoDB connected");
   } catch (err) {
@@ -35,7 +32,6 @@ connectDB();
 const authRoutes = require("../routes/auth");
 const chatbotRoutes = require("../routes/chat");
 const paymentRoutes = require("../routes/paymentRoutes");
-const cartPaymentRoutes = require("../routes/payment");
 const appointmentRoutes = require("../routes/appointments");
 const orderRoutes = require("../routes/orderRoutes");
 const confirmationEmailRoute = require("../routes/sendConfirmationEmail");

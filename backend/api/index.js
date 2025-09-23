@@ -1,3 +1,4 @@
+require("dotenv").config();
 const express = require("express");
 const mongoose = require("mongoose");
 const cors = require("cors");
@@ -8,7 +9,7 @@ const app = express();
 // Middleware
 app.use(
   cors({
-    origin: ["https://rohini-beauty-parlour.vercel.app/api/health", "http://localhost:3000"],
+    origin: ["https://rohini-beauty-parlour.vercel.app", "http://localhost:3000"],
     credentials: true,
   })
 );
@@ -47,18 +48,10 @@ app.use("/api", confirmationEmailRoute);
 app.get("/api/health", (req, res) => {
   let dbHealth = "UNKNOWN";
   switch (mongoose.connection.readyState) {
-    case 0:
-      dbHealth = "DISCONNECTED";
-      break;
-    case 1:
-      dbHealth = "CONNECTED";
-      break;
-    case 2:
-      dbHealth = "CONNECTING";
-      break;
-    case 3:
-      dbHealth = "DISCONNECTING";
-      break;
+    case 0: dbHealth = "DISCONNECTED"; break;
+    case 1: dbHealth = "CONNECTED"; break;
+    case 2: dbHealth = "CONNECTING"; break;
+    case 3: dbHealth = "DISCONNECTING"; break;
   }
   res.status(200).json({
     message: "Welcome",
@@ -77,5 +70,14 @@ app.use((err, req, res, next) => {
   });
 });
 
-// Export only the serverless handler for Vercel
-module.exports = serverless(app);
+// ✅ Local vs Vercel
+if (process.env.VERCEL) {
+  // On Vercel (serverless)
+  module.exports = serverless(app);
+} else {
+  // Local run
+  const PORT = process.env.PORT || 5000;
+  app.listen(PORT, () => {
+    console.log(`🚀 Server running locally on port ${PORT}`);
+  });
+}

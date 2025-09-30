@@ -4,8 +4,8 @@
   "description": "Beauty Parlour backend API for Render deployment",
   "main": "index.js",
   "scripts": {
-    "start": "node index.js",
-    "dev": "nodemon index.js"
+    "start": "node api/index.js",
+    "dev": "nodemon api/index.js"
   },
   "dependencies": {
     "axios": "^1.12.2",

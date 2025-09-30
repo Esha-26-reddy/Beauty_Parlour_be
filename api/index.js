@@ -9,8 +9,8 @@ const app = express();
 app.use(
   cors({
     origin: [
-      "https://rohini-beauty-parlour.vercel.app", // keep if your frontend stays here
-      "http://localhost:3000"
+      "https://rohini-beauty-parlour.vercel.app", // deployed frontend
+      "http://localhost:3000", // local dev
     ],
     credentials: true,
   })
@@ -32,12 +32,12 @@ async function connectDB() {
 }
 
 // Routes
-const authRoutes = require("../routes/auth");
-const chatbotRoutes = require("../routes/chat");
-const paymentRoutes = require("../routes/paymentRoutes");
-const appointmentRoutes = require("../routes/appointments");
-const orderRoutes = require("../routes/orderRoutes");
-const confirmationEmailRoute = require("../routes/sendConfirmationEmail");
+const authRoutes = require("./routes/auth");
+const chatbotRoutes = require("./routes/chat");
+const paymentRoutes = require("./routes/paymentRoutes");
+const appointmentRoutes = require("./routes/appointments");
+const orderRoutes = require("./routes/orderRoutes");
+const confirmationEmailRoute = require("./routes/sendConfirmationEmail");
 
 app.use("/api/auth", authRoutes);
 app.use("/api/chatbot", chatbotRoutes);
@@ -72,7 +72,7 @@ app.use((err, req, res, next) => {
   });
 });
 
-// Start server on Render
+// Start server
 const PORT = process.env.PORT || 5000;
 connectDB().then(() => {
   app.listen(PORT, () => {

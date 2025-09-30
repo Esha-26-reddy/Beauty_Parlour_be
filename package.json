@@ -2,10 +2,10 @@
   "name": "backend",
   "version": "1.0.0",
   "description": "Beauty Parlour backend API for Render deployment",
-  "main": "backend/index.js",
+  "main": "index.js",
   "scripts": {
-    "start": "node backend/index.js",
-    "dev": "nodemon backend/index.js"
+    "start": "node index.js",
+    "dev": "nodemon index.js"
   },
   "dependencies": {
     "axios": "^1.12.2",

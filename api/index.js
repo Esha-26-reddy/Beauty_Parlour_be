@@ -11,7 +11,7 @@ const app = express();
 app.use(
   cors({
     origin: [
-       "https://rohini-beauty-parlour.vercel.app", // deployed frontend
+       "https://beauty-parlour-xi-six.vercel.app", // deployed frontend
       "http://localhost:3000", // local dev
     ],
     credentials: true,

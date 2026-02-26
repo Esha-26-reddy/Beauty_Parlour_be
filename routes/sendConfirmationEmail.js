@@ -1,6 +1,6 @@
 const express = require("express");
 const router = express.Router();
-const sendPaymentConfirmationEmail = require("../utils/sendPaymentConfirmationEmail");
+const sendGroupedInvoiceEmail = require("../utils/sendGroupedInvoiceEmail");
 
 router.post("/send-confirmation-email", async (req, res) => {
   try {
@@ -15,7 +15,6 @@ router.post("/send-confirmation-email", async (req, res) => {
       totalAmount,
     } = req.body;
 
-    // Validate required fields
     if (
       !email ||
       !bookingId ||
@@ -29,22 +28,32 @@ router.post("/send-confirmation-email", async (req, res) => {
       return res.status(400).json({ message: "Missing required fields" });
     }
 
-    // Call sendPaymentConfirmationEmail with email and invoiceData object
-    await sendPaymentConfirmationEmail(email, {
+    await sendGroupedInvoiceEmail({
+      recipientEmail: email,
       invoiceId: bookingId,
       customerName,
       customerEmail: email,
       customerPhone,
-      productName,
-      quantity,
-      unitPrice,
+      products: [
+        {
+          productName,
+          quantity,
+          unitPrice,
+          totalPrice: totalAmount,
+        },
+      ],
       totalAmount,
     });
 
-    res.status(200).json({ message: "✅ Confirmation email sent successfully" });
+    res.status(200).json({
+      message: "✅ Confirmation email sent successfully",
+    });
   } catch (error) {
     console.error("❌ Email sending failed:", error);
-    res.status(500).json({ message: "❌ Failed to send confirmation email", error });
+    res.status(500).json({
+      message: "Failed to send confirmation email",
+      error: error.message,
+    });
   }
 });
 

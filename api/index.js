@@ -41,14 +41,13 @@ const chatbotRoutes = require("../routes/chat");
 const paymentRoutes = require("../routes/paymentRoutes");
 const appointmentRoutes = require("../routes/appointments");
 const orderRoutes = require("../routes/orderRoutes");
-const confirmationEmailRoute = require("../routes/sendConfirmationEmail");
 
 app.use("/api/auth", authRoutes);
 app.use("/api/chatbot", chatbotRoutes);
 app.use("/api/payment", paymentRoutes);
 app.use("/api/appointments", appointmentRoutes);
 app.use("/api/orders", orderRoutes);
-app.use("/api", confirmationEmailRoute);
+
 
 // =======================
 // Health check

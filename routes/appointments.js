@@ -4,40 +4,53 @@ const Appointment = require('../models/Appointments');
 const transporter = require('../utils/mailer');
 require('dotenv').config();
 
-// POST /appointments - create a new appointment
+// POST - Create Appointment
 router.post('/', async (req, res) => {
   try {
     const { name, phone, email, date, service, timeSlot } = req.body;
 
-    // Validate input
     if (!name || !phone || !email || !date || !service || !timeSlot) {
       return res.status(400).json({ message: "All fields are required" });
     }
 
-    // Check if slot is already booked
+    // Check slot availability
     const existing = await Appointment.findOne({ date, timeSlot });
     if (existing) {
       return res.status(400).json({ message: "Time slot already booked" });
     }
 
-    // Save new appointment
-    const appointment = new Appointment({ name, phone, email, date, service, timeSlot });
+    // Save appointment
+    const appointment = new Appointment({
+      name,
+      phone,
+      email,
+      date,
+      service,
+      timeSlot
+    });
+
     await appointment.save();
 
-    // Send confirmation email to user and admin
+    // 🔥 Respond immediately
+    res.status(201).json({
+      message: "Appointment booked successfully",
+      bookingId: appointment._id
+    });
+
+    // 🔥 Send emails in background
     const userMailOptions = {
       from: process.env.EMAIL_USER,
       to: email,
-      subject: 'Appointment Confirmation - Your Booking is Confirmed!',
+      subject: 'Appointment Confirmation - Booking Confirmed',
       html: `
         <h3>Hi ${name},</h3>
-        <p>Thank you for booking an appointment with us.</p>
+        <p>Your appointment has been confirmed.</p>
         <p><strong>Booking ID:</strong> ${appointment._id}</p>
         <p><strong>Date:</strong> ${date}</p>
-        <p><strong>Time Slot:</strong> ${timeSlot}</p>
+        <p><strong>Time:</strong> ${timeSlot}</p>
         <p><strong>Service:</strong> ${service}</p>
-        <br>
-        <p>We look forward to seeing you!</p>
+        <br/>
+        <p>Thank you!</p>
       `
     };
 
@@ -46,34 +59,32 @@ router.post('/', async (req, res) => {
       to: process.env.EMAIL_USER,
       subject: 'New Appointment Booked',
       html: `
-        <h3>New Appointment Details</h3>
+        <h3>New Appointment</h3>
         <p><strong>Name:</strong> ${name}</p>
         <p><strong>Phone:</strong> ${phone}</p>
         <p><strong>Email:</strong> ${email}</p>
         <p><strong>Date:</strong> ${date}</p>
-        <p><strong>Time Slot:</strong> ${timeSlot}</p>
+        <p><strong>Time:</strong> ${timeSlot}</p>
         <p><strong>Service:</strong> ${service}</p>
         <p><strong>Booking ID:</strong> ${appointment._id}</p>
       `
     };
 
-    try {
-      await transporter.sendMail(userMailOptions);
-      await transporter.sendMail(adminMailOptions);
-    } catch (emailError) {
-      console.error("❌ Email sending failed:", emailError.message);
-      // Still proceed even if email fails
-    }
+    transporter.sendMail(userMailOptions).catch(err =>
+      console.error("User email error:", err.message)
+    );
 
-    res.status(201).json({ message: "Appointment booked successfully", bookingId: appointment._id });
+    transporter.sendMail(adminMailOptions).catch(err =>
+      console.error("Admin email error:", err.message)
+    );
 
   } catch (error) {
-    console.error("❌ Appointment booking error:", error.message);
+    console.error("Booking error:", error.message);
     res.status(500).json({ message: "Internal server error" });
   }
 });
 
-// GET /appointments?date=YYYY-MM-DD - get booked slots for that date
+// GET - Fetch booked slots
 router.get('/', async (req, res) => {
   try {
     const { date } = req.query;
@@ -81,9 +92,11 @@ router.get('/', async (req, res) => {
 
     const appointments = await Appointment.find({ date });
     const bookedSlots = appointments.map(app => app.timeSlot);
+
     res.json({ bookedSlots });
+
   } catch (error) {
-    console.error("❌ Fetch error:", error.message);
+    console.error("Fetch error:", error.message);
     res.status(500).json({ message: "Server error" });
   }
 });

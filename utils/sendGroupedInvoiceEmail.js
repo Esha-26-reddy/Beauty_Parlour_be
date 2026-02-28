@@ -1,22 +1,22 @@
-const nodemailer = require("nodemailer");
+const sgMail = require("@sendgrid/mail");
 const generateGroupedInvoicePDFBuffer = require("./generateGroupedInvoicePDFBuffer");
+require("dotenv").config();
 
-const transporter = nodemailer.createTransport({
-  service: "gmail",
-  auth: {
-    user: process.env.EMAIL_USER, // your Gmail address
-    pass: process.env.EMAIL_PASS, // app password or OAuth2 token
-  },
-});
+// ✅ Check environment variables
+if (!process.env.SENDGRID_API_KEY) {
+  console.error("❌ SENDGRID_API_KEY not defined in .env");
+  process.exit(1);
+}
 
-// Verify transporter configuration once at startup (optional but recommended)
-transporter.verify(function (error, success) {
-  if (error) {
-    console.error("❌ Nodemailer transporter verification failed:", error);
-  } else {
-    console.log("✅ Nodemailer transporter is ready");
-  }
-});
+if (!process.env.EMAIL_USER) {
+  console.error("❌ EMAIL_USER not defined in .env");
+  process.exit(1);
+}
+
+// Initialize SendGrid
+sgMail.setApiKey(process.env.SENDGRID_API_KEY);
+
+console.log("📧 SendGrid mailer initialized with:", process.env.EMAIL_USER);
 
 async function sendGroupedInvoiceEmail({
   recipientEmail,
@@ -28,7 +28,7 @@ async function sendGroupedInvoiceEmail({
   totalAmount,
 }) {
   try {
-    // Generate PDF buffer
+    // ✅ Generate PDF buffer
     const pdfBuffer = await generateGroupedInvoicePDFBuffer({
       invoiceId,
       customerName,
@@ -38,16 +38,19 @@ async function sendGroupedInvoiceEmail({
       totalAmount,
     });
 
-    const mailOptions = {
-      from: `"Rohini Beauty Parlour" <${process.env.EMAIL_USER}>`,
+    const msg = {
       to: recipientEmail,
+      from: {
+        email: process.env.EMAIL_USER, // must be verified in SendGrid
+        name: "Rohini Beauty Parlour",
+      },
       subject: `🧾 Invoice & Confirmation - Rohini Beauty Parlour [ID: ${invoiceId}]`,
       text: `Dear ${customerName},
 
 Thank you for your purchase of ₹${totalAmount}.
 Please find your invoice attached.
 
-Feel free to visit our store to collect your items or reach out with any queries.
+If you have any questions, feel free to contact us.
 
 Best regards,
 Rohini Beauty Parlour
@@ -66,18 +69,22 @@ Rohini Beauty Parlour
       `,
       attachments: [
         {
+          content: pdfBuffer.toString("base64"),
           filename: `Invoice_${invoiceId}.pdf`,
-          content: pdfBuffer,
-          contentType: "application/pdf",
+          type: "application/pdf",
+          disposition: "attachment",
         },
       ],
     };
 
-    await transporter.sendMail(mailOptions);
+    await sgMail.send(msg);
     console.log("✅ Grouped invoice email sent successfully.");
   } catch (err) {
-    console.error("❌ Error sending grouped invoice email:", err);
-    throw err; // Propagate error to caller
+    console.error(
+      "❌ Error sending grouped invoice email:",
+      err.response?.body || err.message
+    );
+    throw err;
   }
 }
 

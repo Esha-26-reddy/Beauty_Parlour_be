@@ -1,30 +1,38 @@
-const nodemailer = require('nodemailer');
-require('dotenv').config();
+const sgMail = require("@sendgrid/mail");
+require("dotenv").config();
 
-// Check if email credentials are loaded
-if (!process.env.EMAIL_USER || !process.env.EMAIL_PASS) {
-  console.error("❌ EMAIL_USER or EMAIL_PASS not defined in .env");
-  process.exit(1); // Exit the app if email credentials are missing
+// ✅ Check if SendGrid API key exists
+if (!process.env.SENDGRID_API_KEY) {
+  console.error("❌ SENDGRID_API_KEY not defined in .env");
+  process.exit(1);
 }
 
-console.log("📧 Mailer initialized with:", process.env.EMAIL_USER);
+if (!process.env.EMAIL_USER) {
+  console.error("❌ EMAIL_USER not defined in .env");
+  process.exit(1);
+}
 
-// Create transporter
-const transporter = nodemailer.createTransport({
-  service: 'gmail',
-  auth: {
-    user: process.env.EMAIL_USER,
-    pass: process.env.EMAIL_PASS,
-  },
-});
+// Set SendGrid API Key
+sgMail.setApiKey(process.env.SENDGRID_API_KEY);
 
-// Optional: Verify transporter connection
-transporter.verify((error, success) => {
-  if (error) {
-    console.error('❌ Error verifying email transporter:', error);
-  } else {
-    console.log('✅ Email transporter is ready');
+console.log("📧 SendGrid mailer initialized with sender:", process.env.EMAIL_USER);
+
+// ✅ Export sendMail function (similar to nodemailer)
+const sendMail = async (mailOptions) => {
+  try {
+    const msg = {
+      to: mailOptions.to,
+      from: process.env.EMAIL_USER, // must be verified in SendGrid
+      subject: mailOptions.subject,
+      html: mailOptions.html,
+      attachments: mailOptions.attachments || [],
+    };
+
+    const response = await sgMail.send(msg);
+    console.log("✅ Email sent successfully:", response[0].statusCode);
+  } catch (error) {
+    console.error("❌ SendGrid email error:", error.response?.body || error.message);
   }
-});
+};
 
-module.exports = transporter;
+module.exports = { sendMail };

@@ -15,9 +15,6 @@ const verifyPayment = (orderId, paymentId, signature) => {
     .update(body)
     .digest("hex");
 
-  console.log("🔎 Expected Signature:", expectedSignature);
-  console.log("🔎 Received Signature:", signature);
-
   return expectedSignature === signature;
 };
 
@@ -25,9 +22,6 @@ const verifyPayment = (orderId, paymentId, signature) => {
 // ✅ Single Product Order
 // ========================
 router.post("/create", async (req, res) => {
-  console.log("🔥 /create route hit");
-  console.log("📦 BODY RECEIVED:", req.body);
-
   try {
     let {
       razorpay_order_id,
@@ -46,13 +40,13 @@ router.post("/create", async (req, res) => {
     amount = Number(amount);
 
     if (
-      razorpay_payment_id == null ||
-      razorpay_order_id == null ||
-      razorpay_signature == null ||
+      !razorpay_order_id ||
+      !razorpay_payment_id ||
+      !razorpay_signature ||
       !productId ||
       !productName ||
-      isNaN(quantity) ||
-      isNaN(amount) ||
+      !quantity ||
+      !amount ||
       !customerName ||
       !customerEmail ||
       !customerPhone
@@ -85,43 +79,45 @@ router.post("/create", async (req, res) => {
       amount,
       paymentId: razorpay_payment_id,
       customerName,
-      customerEmail: customerEmail.toLowerCase(), // ✅ FIXED
+      customerEmail: customerEmail.toLowerCase(),
       customerPhone,
       source: "single",
     });
 
     const savedOrder = await newOrder.save();
-    console.log("✅ Order saved in DB");
+    console.log("✅ Single order saved in DB");
 
-    await sendGroupedInvoiceEmail({
-      recipientEmail: customerEmail.toLowerCase(),
-      invoiceId: razorpay_payment_id,
-      customerName,
-      customerEmail: customerEmail.toLowerCase(),
-      customerPhone,
-      products: [
-        {
-          productName,
-          quantity,
-          unitPrice,
-          totalPrice: amount,
-        },
-      ],
-      totalAmount: amount,
-    });
+    // 🔥 Email should NOT break order saving
+    try {
+      await sendGroupedInvoiceEmail({
+        recipientEmail: customerEmail.toLowerCase(),
+        invoiceId: razorpay_payment_id,
+        customerName,
+        customerEmail: customerEmail.toLowerCase(),
+        customerPhone,
+        products: [
+          {
+            productName,
+            quantity,
+            unitPrice,
+            totalPrice: amount,
+          },
+        ],
+        totalAmount: amount,
+      });
 
-    console.log("✅ Email sent for single product order.");
+      console.log("✅ Email sent for single product order");
+    } catch (emailError) {
+      console.error("⚠ Email failed but order saved:", emailError.message);
+    }
 
     res.status(200).json({
-      message: "Order saved & email sent",
+      message: "Order saved successfully",
       orderId: savedOrder._id,
     });
   } catch (error) {
     console.error("❌ Error in /create:", error);
-    res.status(500).json({
-      message: "Internal Server Error",
-      error: error.message,
-    });
+    res.status(500).json({ message: "Internal Server Error" });
   }
 });
 
@@ -129,9 +125,6 @@ router.post("/create", async (req, res) => {
 // ✅ Cart Order
 // ========================
 router.post("/complete-cart", async (req, res) => {
-  console.log("🔥 /complete-cart route hit");
-  console.log("📦 BODY RECEIVED:", req.body);
-
   try {
     const {
       razorpay_order_id,
@@ -144,9 +137,9 @@ router.post("/complete-cart", async (req, res) => {
     } = req.body;
 
     if (
-      razorpay_payment_id == null ||
-      razorpay_order_id == null ||
-      razorpay_signature == null ||
+      !razorpay_order_id ||
+      !razorpay_payment_id ||
+      !razorpay_signature ||
       !email ||
       !customerName ||
       !customerPhone ||
@@ -189,7 +182,7 @@ router.post("/complete-cart", async (req, res) => {
       amount: totalAmount,
       paymentId: razorpay_payment_id,
       customerName,
-      customerEmail: email.toLowerCase(), // ✅ FIXED
+      customerEmail: email.toLowerCase(),
       customerPhone,
       source: "cart",
     });
@@ -197,30 +190,35 @@ router.post("/complete-cart", async (req, res) => {
     const savedOrder = await newOrder.save();
     console.log("✅ Cart order saved in DB");
 
-    await sendGroupedInvoiceEmail({
-      recipientEmail: email.toLowerCase(),
-      invoiceId: razorpay_payment_id,
-      customerName,
-      customerEmail: email.toLowerCase(),
-      customerPhone,
-      products,
-      totalAmount,
-    });
+    // 🔥 Email should NOT block response
+    try {
+      await sendGroupedInvoiceEmail({
+        recipientEmail: email.toLowerCase(),
+        invoiceId: razorpay_payment_id,
+        customerName,
+        customerEmail: email.toLowerCase(),
+        customerPhone,
+        products,
+        totalAmount,
+      });
 
-    console.log("✅ Cart email sent");
+      console.log("✅ Cart email sent");
+    } catch (emailError) {
+      console.error("⚠ Cart email failed but order saved:", emailError.message);
+    }
 
     res.status(200).json({
-      message: "Cart order saved & email sent",
+      message: "Cart order saved successfully",
       orderId: savedOrder._id,
     });
   } catch (error) {
     console.error("❌ Error in /complete-cart:", error);
-    res.status(500).json({ message: error.message });
+    res.status(500).json({ message: "Internal Server Error" });
   }
 });
 
 // ========================
-// 📦 Get Order History by Email
+// 📦 Get Order History
 // ========================
 router.get("/history/:email", async (req, res) => {
   try {
@@ -232,7 +230,7 @@ router.get("/history/:email", async (req, res) => {
 
     const orders = await Order.find({
       customerEmail: email.toLowerCase(),
-    }).sort({ date: -1 });
+    }).sort({ createdAt: -1 });
 
     res.status(200).json({ orders });
   } catch (error) {
